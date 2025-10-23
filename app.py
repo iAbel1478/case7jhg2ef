@@ -11,17 +11,30 @@ CONTAINER_NAME = 'lanternfly-images'
 # Initialize Flask app
 app = Flask(__name__)
 
-# Create Blob Service Client
-bsc = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
-cc = bsc.get_container_client(CONTAINER_NAME)
+# Create Blob Service Client (with error handling)
+bsc = None
+cc = None
+if AZURE_STORAGE_CONNECTION_STRING:
+    try:
+        bsc = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+        cc = bsc.get_container_client(CONTAINER_NAME)
+    except Exception as e:
+        print(f"Warning: Could not initialize Azure Storage: {e}")
+        bsc = None
+        cc = None
+else:
+    print("Warning: AZURE_STORAGE_CONNECTION_STRING not set")
 
 # Ensure container exists and is public
-try:
-    cc.create_container()
-    cc.set_container_access_policy(public_access=PublicAccess.Container)
-    print(f"✅ Container '{CONTAINER_NAME}' ready")
-except Exception as e:
-    print(f"ℹ️ Container may already exist: {e}")
+if cc:
+    try:
+        cc.create_container()
+        cc.set_container_access_policy(public_access=PublicAccess.Container)
+        print(f"✅ Container '{CONTAINER_NAME}' ready")
+    except Exception as e:
+        print(f"ℹ️ Container may already exist: {e}")
+else:
+    print("⚠️ Azure Storage not configured - upload/gallery features will not work")
 
 @app.route('/')
 def index():
@@ -30,6 +43,10 @@ def index():
 @app.route('/api/v1/upload', methods=['POST'])
 def upload():
     try:
+        # Check if Azure storage is available
+        if not bsc or not cc:
+            return jsonify(ok=False, error="Azure Storage not configured"), 503
+        
         # Check if file was uploaded
         if 'file' not in request.files:
             return jsonify(ok=False, error="No file provided"), 400
@@ -72,6 +89,10 @@ def upload():
 @app.route('/api/v1/gallery', methods=['GET'])
 def gallery():
     try:
+        # Check if Azure storage is available
+        if not bsc or not cc:
+            return jsonify(ok=False, error="Azure Storage not configured"), 503
+        
         # List all blobs in container
         blob_list = cc.list_blobs()
         gallery_urls = []
