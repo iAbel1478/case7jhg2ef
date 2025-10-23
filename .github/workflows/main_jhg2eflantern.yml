@@ -71,7 +71,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'jhg2eflantern'
+          app-name: 'lantern7'
           slot-name: 'Production'
           startup-command: 'python startup.py'
           
