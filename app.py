@@ -111,7 +111,7 @@ def gallery():
         app.logger.error(f"Gallery error: {str(e)}")
         return jsonify(ok=False, error=str(e)), 500
 
-@app.route('/health', methods=['GET'])
+@app.route('/api/v1/health', methods=['GET'])
 def health():
     try:
         # Check if Azure Storage is configured
