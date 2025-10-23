@@ -109,7 +109,7 @@ def gallery():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return "OK", 200
+    return jsonify({"status": "OK", "message": "Service is running"}), 200
 
 if __name__ == '__main__':
     # For local development
