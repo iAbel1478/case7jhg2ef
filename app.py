@@ -40,6 +40,10 @@ else:
 def index():
     return render_template('index.html')
 
+@app.route('/test')
+def test():
+    return jsonify({"message": "Test endpoint working", "status": "OK"}), 200
+
 @app.route('/api/v1/upload', methods=['POST'])
 def upload():
     try:
@@ -109,7 +113,22 @@ def gallery():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "OK", "message": "Service is running"}), 200
+    try:
+        # Check if Azure Storage is configured
+        storage_status = "configured" if bsc and cc else "not configured"
+        
+        return jsonify({
+            "status": "OK", 
+            "message": "Service is running",
+            "azure_storage": storage_status,
+            "timestamp": datetime.utcnow().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "ERROR", 
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
 
 if __name__ == '__main__':
     # For local development
